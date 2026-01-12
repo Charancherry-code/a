@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Me-API Playground</title>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <h1>Me-API Playground</h1>
+
+    <h2>My Profile</h2>
+    <pre id="profile">Loading...</pre>
+
+    <h2>Search Projects by Skill</h2>
+    <input id="skill" placeholder="Enter skill (e.g. Node.js)" />
+    <button onclick="searchProjects()">Search</button>
+
+    <pre id="projects"></pre>
+
+    <script>
+      const API_URL = "http://localhost:3000";
+
+      async function loadProfile() {
+        const res = await fetch(`${API_URL}/profile`);
+        const data = await res.json();
+        document.getElementById("profile").textContent = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+
+      async function searchProjects() {
+        const skill = document.getElementById("skill").value;
+        let url = `${API_URL}/projects`;
+
+        if (skill) {
+          url += `?skill=${skill}`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById("projects").textContent = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+
+      loadProfile();
+    </script>
+  </body>
+</html>
