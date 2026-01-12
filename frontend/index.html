@@ -67,56 +67,87 @@
 
     <!-- Script -->
     <script>
-      const API_BASE = "https://jd-api-assessment.vercel.app/api";
+      // ✅ RELATIVE PATH — works on any Vercel domain
+      const API_BASE = "/api";
 
       // Load profile
-      fetch(`${API_BASE}/profile`)
-        .then((res) => res.json())
-        .then((data) => {
-          document.getElementById("profile").innerHTML = `
-          <p><span class="font-semibold text-white">Name:</span> ${data.name}</p>
-          <p><span class="font-semibold text-white">Email:</span> ${data.email}</p>
-          <p><span class="font-semibold text-white">Education:</span> ${data.education}</p>
+      async function loadProfile() {
+        const profileDiv = document.getElementById("profile");
+        try {
+          const res = await fetch(`${API_BASE}/profile`);
+          if (!res.ok) throw new Error("Failed to fetch profile");
 
-          <div class="flex gap-4 mt-4">
-            <a href="${data.github}" target="_blank" class="text-blue-400 hover:underline">GitHub</a>
-            <a href="${data.linkedin}" target="_blank" class="text-blue-400 hover:underline">LinkedIn</a>
-            <a href="${data.portfolio}" target="_blank" class="text-blue-400 hover:underline">Portfolio</a>
-          </div>
-        `;
-        });
+          const data = await res.json();
 
-      function searchProjects() {
-        const skill = document.getElementById("skill").value;
+          profileDiv.innerHTML = `
+            <p><span class="font-semibold text-white">Name:</span> ${data.name}</p>
+            <p><span class="font-semibold text-white">Email:</span> ${data.email}</p>
+            <p><span class="font-semibold text-white">Education:</span> ${data.education}</p>
+
+            <div class="flex gap-4 mt-4">
+              <a href="${data.github}" target="_blank" class="text-blue-400 hover:underline">GitHub</a>
+              <a href="${data.linkedin}" target="_blank" class="text-blue-400 hover:underline">LinkedIn</a>
+              <a href="${data.portfolio}" target="_blank" class="text-blue-400 hover:underline">Portfolio</a>
+            </div>
+          `;
+        } catch (err) {
+          console.error(err);
+          profileDiv.innerHTML =
+            "<p class='text-red-400'>Failed to load profile.</p>";
+        }
+      }
+
+      // Search projects
+      async function searchProjects() {
+        const skill = document.getElementById("skill").value.trim();
         const container = document.getElementById("projects");
+
+        if (!skill) {
+          container.innerHTML =
+            "<p class='text-gray-400'>Please enter a skill.</p>";
+          return;
+        }
 
         container.innerHTML = "Loading projects...";
 
-        fetch(`${API_BASE}/projects?skill=${skill}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.length === 0) {
-              container.innerHTML =
-                "<p class='text-gray-400'>No projects found.</p>";
-              return;
-            }
+        try {
+          const res = await fetch(
+            `${API_BASE}/projects?skill=${encodeURIComponent(skill)}`
+          );
+          if (!res.ok) throw new Error("Failed to fetch projects");
 
-            container.innerHTML = data
-              .map(
-                (project) => `
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-              <h3 class="text-lg font-semibold text-white">${project.title}</h3>
-              <p class="text-gray-400 mt-1">${project.description}</p>
-              <p class="text-sm text-gray-500 mt-2">Skill: ${project.skill}</p>
-              <a href="${project.links}" target="_blank" class="text-blue-400 hover:underline mt-2 inline-block">
-                View Project →
-              </a>
-            </div>
-          `
-              )
-              .join("");
-          });
+          const data = await res.json();
+
+          if (data.length === 0) {
+            container.innerHTML =
+              "<p class='text-gray-400'>No projects found.</p>";
+            return;
+          }
+
+          container.innerHTML = data
+            .map(
+              (project) => `
+              <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <h3 class="text-lg font-semibold text-white">${project.title}</h3>
+                <p class="text-gray-400 mt-1">${project.description}</p>
+                <p class="text-sm text-gray-500 mt-2">Skill: ${project.skill}</p>
+                <a href="${project.links}" target="_blank"
+                  class="text-blue-400 hover:underline mt-2 inline-block">
+                  View Project →
+                </a>
+              </div>
+            `
+            )
+            .join("");
+        } catch (err) {
+          console.error(err);
+          container.innerHTML =
+            "<p class='text-red-400'>Failed to load projects.</p>";
+        }
       }
+
+      // Initial load
+      loadProfile();
     </script>
   </body>
 </html>
