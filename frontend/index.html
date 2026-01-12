@@ -1,52 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Me-API Playground</title>
     <meta charset="UTF-8" />
+    <title>Me-API Playground</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
-  <body>
-    <h1>Me-API Playground</h1>
 
-    <h2>My Profile</h2>
-    <pre id="profile">Loading...</pre>
+  <body
+    class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen"
+  >
+    <!-- Header -->
+    <header class="text-center py-12">
+      <h1 class="text-4xl font-bold tracking-wide">Me-API Playground</h1>
+      <p class="text-gray-400 mt-3">
+        Backend + Database API demo (Track A Assessment)
+      </p>
+    </header>
 
-    <h2>Search Projects by Skill</h2>
-    <input id="skill" placeholder="Enter skill (e.g. Node.js)" />
-    <button onclick="searchProjects()">Search</button>
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-6 space-y-12">
+      <!-- Profile Card -->
+      <section
+        class="bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-700"
+      >
+        <h2 class="text-2xl font-semibold mb-4">👤 My Profile</h2>
 
-    <pre id="projects"></pre>
+        <div id="profile" class="space-y-2 text-gray-300">
+          Loading profile...
+        </div>
+      </section>
 
+      <!-- Search Section -->
+      <section
+        class="bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-700"
+      >
+        <h2 class="text-2xl font-semibold mb-4">🔍 Search Projects by Skill</h2>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <input
+            id="skill"
+            type="text"
+            placeholder="e.g. Node.js"
+            class="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            onclick="searchProjects()"
+            class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition font-semibold"
+          >
+            Search
+          </button>
+        </div>
+
+        <div id="projects" class="mt-6 space-y-4"></div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 mt-16 pb-8">
+      Built by Charan Banoth • Node.js • Supabase • Vercel
+    </footer>
+
+    <!-- Script -->
     <script>
-      const API_URL = "http://localhost:3000";
+      const API_BASE = "https://jd-api-assessment.vercel.app/api";
 
-      async function loadProfile() {
-        const res = await fetch(`${API_URL}/profile`);
-        const data = await res.json();
-        document.getElementById("profile").textContent = JSON.stringify(
-          data,
-          null,
-          2
-        );
-      }
+      // Load profile
+      fetch(`${API_BASE}/profile`)
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById("profile").innerHTML = `
+          <p><span class="font-semibold text-white">Name:</span> ${data.name}</p>
+          <p><span class="font-semibold text-white">Email:</span> ${data.email}</p>
+          <p><span class="font-semibold text-white">Education:</span> ${data.education}</p>
 
-      async function searchProjects() {
+          <div class="flex gap-4 mt-4">
+            <a href="${data.github}" target="_blank" class="text-blue-400 hover:underline">GitHub</a>
+            <a href="${data.linkedin}" target="_blank" class="text-blue-400 hover:underline">LinkedIn</a>
+            <a href="${data.portfolio}" target="_blank" class="text-blue-400 hover:underline">Portfolio</a>
+          </div>
+        `;
+        });
+
+      function searchProjects() {
         const skill = document.getElementById("skill").value;
-        let url = `${API_URL}/projects`;
+        const container = document.getElementById("projects");
 
-        if (skill) {
-          url += `?skill=${skill}`;
-        }
+        container.innerHTML = "Loading projects...";
 
-        const res = await fetch(url);
-        const data = await res.json();
-        document.getElementById("projects").textContent = JSON.stringify(
-          data,
-          null,
-          2
-        );
+        fetch(`${API_BASE}/projects?skill=${skill}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.length === 0) {
+              container.innerHTML =
+                "<p class='text-gray-400'>No projects found.</p>";
+              return;
+            }
+
+            container.innerHTML = data
+              .map(
+                (project) => `
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+              <h3 class="text-lg font-semibold text-white">${project.title}</h3>
+              <p class="text-gray-400 mt-1">${project.description}</p>
+              <p class="text-sm text-gray-500 mt-2">Skill: ${project.skill}</p>
+              <a href="${project.links}" target="_blank" class="text-blue-400 hover:underline mt-2 inline-block">
+                View Project →
+              </a>
+            </div>
+          `
+              )
+              .join("");
+          });
       }
-
-      loadProfile();
     </script>
   </body>
 </html>
